@@ -4,6 +4,9 @@ export interface ResizeOptions {
   maintainAspectRatio: boolean;
   quality: number;
   format: "jpeg" | "png" | "webp";
+  activePreset?: string;
+  backgroundColor: string;
+  transparentBackground: boolean;
 }
 
 export interface ImageState {
@@ -17,4 +20,5 @@ export interface ImageState {
     width: number;
     height: number;
   };
+  originalFileName?: string;
 }

@@ -8,6 +8,17 @@ import { ImageState, ResizeOptions } from "../types";
 import { getImageDimensions } from "../lib/imageUtils";
 
 export default function Home() {
+  // Update initial state to include background options
+  const [resizeOptions, setResizeOptions] = useState<ResizeOptions>({
+    width: 800,
+    height: 600,
+    maintainAspectRatio: true,
+    quality: 85,
+    format: "png", // Default to PNG for transparency support
+    backgroundColor: "#ffffff",
+    transparentBackground: false,
+  });
+
   const [imageState, setImageState] = useState<ImageState>({
     originalFile: null,
     originalUrl: "",
@@ -15,14 +26,6 @@ export default function Home() {
     resizedBlob: null,
     isLoading: false,
     error: null,
-  });
-
-  const [resizeOptions, setResizeOptions] = useState<ResizeOptions>({
-    width: 800,
-    height: 600,
-    maintainAspectRatio: true,
-    quality: 85,
-    format: "jpeg",
   });
 
   const handleImageSelect = useCallback(async (file: File) => {
@@ -37,6 +40,7 @@ export default function Home() {
       isLoading: false,
       error: null,
       originalDimensions,
+      originalFileName: file.name,
     });
 
     // Set initial dimensions based on original image
@@ -59,6 +63,11 @@ export default function Home() {
       formData.append("height", resizeOptions.height.toString());
       formData.append("quality", resizeOptions.quality.toString());
       formData.append("format", resizeOptions.format);
+      formData.append("backgroundColor", resizeOptions.backgroundColor);
+      formData.append(
+        "transparentBackground",
+        resizeOptions.transparentBackground.toString()
+      );
 
       const response = await fetch("/api/resize", {
         method: "POST",
@@ -79,7 +88,7 @@ export default function Home() {
         isLoading: false,
       }));
     } catch (error) {
-      console.log("[sufi] Error: ", error);
+      console.error("[sufi] Error: ", error);
       setImageState((prev) => ({
         ...prev,
         error: "Failed to resize image",
@@ -145,6 +154,7 @@ export default function Home() {
                 width={resizeOptions.width}
                 height={resizeOptions.height}
                 isLoading={imageState.isLoading}
+                originalFileName={imageState.originalFileName}
               />
             </div>
           </>

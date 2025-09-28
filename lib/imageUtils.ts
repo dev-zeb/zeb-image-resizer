@@ -14,9 +14,36 @@ export const validateImageFile = (file: File): string | null => {
 };
 
 export const calculateAspectRatio = (width: number, height: number): string => {
-  const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
+  const gcd = (a: number, b: number): number => {
+    a = Math.round(a);
+    b = Math.round(b);
+    return b === 0 ? a : gcd(b, a % b);
+  };
+
   const divisor = gcd(width, height);
-  return `${width / divisor}:${height / divisor}`;
+  const ratioWidth = width / divisor;
+  const ratioHeight = height / divisor;
+
+  // Round to common ratios for better readability
+  const commonRatios: { [key: string]: [number, number] } = {
+    "1:1": [1, 1],
+    "3:2": [3, 2],
+    "4:3": [4, 3],
+    "16:9": [16, 9],
+    "16:10": [16, 10],
+    "21:9": [21, 9],
+  };
+
+  for (const [ratio, [w, h]] of Object.entries(commonRatios)) {
+    const tolerance = 0.1;
+    if (Math.abs(ratioWidth / ratioHeight - w / h) < tolerance) {
+      return ratio;
+    }
+  }
+
+  return `${Math.round(ratioWidth * 10) / 10}:${
+    Math.round(ratioHeight * 10) / 10
+  }`;
 };
 
 export const formatFileSize = (bytes: number): string => {
@@ -33,7 +60,11 @@ export const getImageDimensions = (
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
-      resolve({ width: img.width, height: img.height });
+      resolve({
+        width: Math.round(img.width),
+        height: Math.round(img.height),
+      });
+      URL.revokeObjectURL(img.src); // Clean up
     };
     img.src = URL.createObjectURL(file);
   });
